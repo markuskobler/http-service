@@ -156,72 +156,72 @@ impl<I: TryStream> Server<I, (), ()> {
     }
 }
 
-impl<I: TryStream, Sp> Builder<I, Sp> {
-    /// Sets the [`Spawn`] to deal with starting connection tasks.
-    pub fn with_spawner<Sp2>(self, new_spawner: Sp2) -> Builder<I, Sp2> {
-        Builder {
-            inner: self.inner.executor(Compat::new(new_spawner)),
-        }
-    }
+// impl<I: TryStream, Sp> Builder<I, Sp> {
+//     /// Sets the [`Spawn`] to deal with starting connection tasks.
+//     pub fn with_spawner<Sp2>(self, new_spawner: Sp2) -> Builder<I, Sp2> {
+//         Builder {
+//             inner: self.inner.executor(Compat::new(new_spawner)),
+//         }
+//     }
 
-    /// Consume this [`Builder`], creating a [`Server`].
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use http_service::{Response, Body};
-    /// use http_service_hyper::Server;
-    /// use romio::TcpListener;
-    ///
-    /// // Construct an executor to run our tasks on
-    /// let mut pool = futures::executor::ThreadPool::new()?;
-    ///
-    /// // And an HttpService to handle each connection...
-    /// let service = |req| {
-    ///     futures::future::ok::<_, std::io::Error>(Response::new(Body::from("Hello World")))
-    /// };
-    ///
-    /// // Then bind, configure the spawner to our pool, and serve...
-    /// let addr = "127.0.0.1:3000".parse()?;
-    /// let mut listener = TcpListener::bind(&addr)?;
-    /// let server = Server::builder(listener.incoming())
-    ///     .with_spawner(pool.clone())
-    ///     .serve(service);
-    ///
-    /// // Finally, spawn `server` onto our executor...
-    /// pool.run(server)?;
-    /// # Ok::<(), Box<dyn std::error::Error>>(())
-    pub fn serve<S: HttpService>(self, service: S) -> Server<I, S, Sp>
-    where
-        I: TryStream + Unpin,
-        I::Ok: AsyncRead + AsyncWrite + Send + Unpin + 'static,
-        I::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
-        Sp: Clone + Spawn + Unpin + Send + 'static,
-        S::ConnectionFuture: TryFuture<Error = std::io::Error>,
-    {
-        Server {
-            inner: self.inner.serve(WrapHttpService {
-                service: Arc::new(service),
-            }),
-        }
-    }
-}
+//     /// Consume this [`Builder`], creating a [`Server`].
+//     ///
+//     /// # Examples
+//     ///
+//     /// ```no_run
+//     /// use http_service::{Response, Body};
+//     /// use http_service_hyper::Server;
+//     /// use romio::TcpListener;
+//     ///
+//     /// // Construct an executor to run our tasks on
+//     /// let mut pool = futures::executor::ThreadPool::new()?;
+//     ///
+//     /// // And an HttpService to handle each connection...
+//     /// let service = |req| {
+//     ///     futures::future::ok::<_, std::io::Error>(Response::new(Body::from("Hello World")))
+//     /// };
+//     ///
+//     /// // Then bind, configure the spawner to our pool, and serve...
+//     /// let addr = "127.0.0.1:3000".parse()?;
+//     /// let mut listener = TcpListener::bind(&addr)?;
+//     /// let server = Server::builder(listener.incoming())
+//     ///     .with_spawner(pool.clone())
+//     ///     .serve(service);
+//     ///
+//     /// // Finally, spawn `server` onto our executor...
+//     /// pool.run(server)?;
+//     /// # Ok::<(), Box<dyn std::error::Error>>(())
+//     pub fn serve<S: HttpService>(self, service: S) -> Server<I, S, Sp>
+//     where
+//         I: TryStream + Unpin,
+//         I::Ok: AsyncRead + AsyncWrite + Send + Unpin + 'static,
+//         I::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
+//         Sp: Clone + Spawn + Unpin + Send + 'static,
+//         S::ConnectionFuture: TryFuture<Error = std::io::Error>,
+//     {
+//         Server {
+//             inner: self.inner.serve(WrapHttpService {
+//                 service: Arc::new(service),
+//             }),
+//         }
+//     }
+// }
 
-impl<I, S, Sp> Future for Server<I, S, Sp>
-where
-    I: TryStream + Unpin,
-    I::Ok: AsyncRead + AsyncWrite + Send + Unpin + 'static,
-    I::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
-    S: HttpService,
-    S::ConnectionFuture: TryFuture<Error = std::io::Error>,
-    Sp: Clone + Spawn + Unpin + Send + 'static,
-{
-    type Output = hyper::Result<()>;
+// impl<I, S, Sp> Future for Server<I, S, Sp>
+// where
+//     I: TryStream + Unpin,
+//     I::Ok: AsyncRead + AsyncWrite + Send + Unpin + 'static,
+//     I::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
+//     S: HttpService,
+//     S::ConnectionFuture: TryFuture<Error = std::io::Error>,
+//     Sp: Clone + Spawn + Unpin + Send + 'static,
+// {
+//     type Output = hyper::Result<()>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<hyper::Result<()>> {
-        self.inner.poll_unpin(cx)
-    }
-}
+//     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<hyper::Result<()>> {
+//         self.inner.poll_unpin(cx)
+//     }
+// }
 
 /// Serve the given `HttpService` at the given address, using `hyper` as backend, and return a
 /// `Future` that can be `await`ed on.
